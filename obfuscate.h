@@ -24,6 +24,11 @@ following traits:
 Example:
 const char* obfuscated_string = AY_OBFUSCATE("Hello World");
 std::cout << obfuscated_string << std::endl;
+char * var = AY_OBFUSCATE( “字符串” );
+const  char * var = AY_OBFUSCATE( “字符串” );
+static  const  char * var = AY_OBFUSCATE( “字符串” );
+std::string var (AY_OBFUSCATE( " string " ));
+function_that_takes_char_pointer (AY_OBFUSCATE( " string " ));
 
 ----------------------------------------------------------------------------- */
 
