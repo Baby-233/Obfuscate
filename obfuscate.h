@@ -32,11 +32,23 @@ function_that_takes_char_pointer (AY_OBFUSCATE( " string " ));
 
 ----------------------------------------------------------------------------- */
 
+#pragma once
+
+// Workaround for __LINE__ not being constexpr when /ZI (Edit and Continue) is enabled in Visual Studio
+// See: https://developercommunity.visualstudio.com/t/-line-cannot-be-used-as-an-argument-for-constexpr/195665
+#ifdef _MSC_VER
+	#define AY_CAT(X,Y) AY_CAT2(X,Y)
+	#define AY_CAT2(X,Y) X##Y
+	#define AY_LINE int(AY_CAT(__LINE__,U))
+#else
+	#define AY_LINE __LINE__
+#endif
+
 #ifndef AY_OBFUSCATE_DEFAULT_KEY
 	// The default 64 bit key to obfuscate strings with.
 	// This can be user specified by defining AY_OBFUSCATE_DEFAULT_KEY before 
 	// including obfuscate.h
-	#define AY_OBFUSCATE_DEFAULT_KEY ay::generate_key(__LINE__)
+	#define AY_OBFUSCATE_DEFAULT_KEY ay::generate_key(AY_LINE)
 #endif
 
 namespace ay
@@ -44,7 +56,7 @@ namespace ay
 	using size_type = unsigned long long;
 	using key_type = unsigned long long;
 
-	// Generate a psuedo-random key that spans all 8 bytes
+	// Generate a pseudo-random key that spans all 8 bytes
 	constexpr key_type generate_key(key_type seed)
 	{
 		// Use the MurmurHash3 64-bit finalizer to hash our seed
@@ -67,7 +79,7 @@ namespace ay
 		// Obfuscate with a simple XOR cipher based on key
 		for (size_type i = 0; i < size; i++)
 		{
-			data[i] ^= char(key >> ((i % 8) * 8));
+			data[i] ^= char((key >> ((i % 8) * 8)) & 0xFF);
 		}
 	}
 
@@ -201,7 +213,7 @@ namespace ay
 		static_assert((key) >= (1ull << 56), "key must span all 8 bytes"); \
 		constexpr auto n = sizeof(data)/sizeof(data[0]); \
 		constexpr auto obfuscator = ay::make_obfuscator<n, key>(data); \
-		static auto obfuscated_data = ay::obfuscated_data<n, key>(obfuscator); \
+		thread_local auto obfuscated_data = ay::obfuscated_data<n, key>(obfuscator); \
 		return obfuscated_data; \
 	}()
 
